@@ -1,15 +1,17 @@
 import sys
-#TODO - gestionar el cerrado del programa
-#sys.path
-sys.path += ["src"]
+import time
+import tellopy
+
 # Levantar y monitorizar servicios
 # Crea a control, ml y gui y los comunica
 # Si se caen los levanta de nuevo (Docker?)
+sys.path += ["src"]
+
 import control
 import gui as g
 import ml as m
-import tellopy
-import time
+
+
 
 def main():
     global dron, ctrl, gui, ml
@@ -21,15 +23,14 @@ def main():
     gui = g.GUI()
     ml = m.ML()
 
-    #Setup interconnections
+    #Setup interconnections    
     ctrl.setDron(dron)
     ctrl.setGui(gui)
-    ctrl.setMl(ml)
+    ctrl.setMl(ml)   
+
+    #Empieza La GUI
+    gui.init()
     
-    #wait for quit event from ctrl
-    #while ctrl.quit_flag is not True:
-    #    time.sleep(1)
-    #endProgram()
 
 def endProgram():
     global dron, ctrl, gui, ml
