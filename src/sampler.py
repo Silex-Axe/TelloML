@@ -7,11 +7,12 @@ class Sampler(object):
     def __init__(self):
         self.base_path ="./model_data/samples/"
         self.class_name="default"
-        self.num_samples=100
+        self.num_samples=200
+        self.take = 0
         self.ctrl = None    
     
     def startSampling(self):
-
+        self.take +=1
         threading.Thread(target=self.sampleThread, args=[]).start()
     
     def sampleThread(self):
@@ -21,12 +22,12 @@ class Sampler(object):
             i = 0
             current_img = None
             while i < self.num_samples:
-                time.sleep(0.01)# Para no petar los recursos TODO- Optimizar el uso de sleep Barreras/colas?
+                time.sleep(0.05)# Para no petar los recursos TODO- Optimizar el uso de sleep Barreras/colas?
                 np_img = self.getSample()
                 if current_img is not np_img:
                     print("new image with shape: ",np_img.shape)
                     current_img = np_img
-                    path = self.base_path+self.class_name+"/"+str(i)+".bmp"
+                    path = self.base_path+self.class_name+ str(self.take)+"/"+str(i)+".bmp"
                     self.saveImage(path,np_img)
                     i+=1
                 else:
@@ -36,7 +37,14 @@ class Sampler(object):
 
 
     def askQuestions(self):
-        print("Will save ",self.num_samples," samples in '"+self.base_path+self.class_name+"'")
+        print("Will save ",self.num_samples," samples in '"+self.folder_path()+"'")
+        print("Will start recording samples in:")
+        seconds = 5
+        print(seconds,"seconds")
+        while seconds > 0:
+            time.sleep(1)
+            seconds-=1
+            print(seconds,"seconds")
 
     def getSample(self):
         #Obtener sample desde Control
@@ -45,15 +53,17 @@ class Sampler(object):
         else:
             return None
 
+    def folder_path(self):
+        return self.base_path+self.class_name+str(self.take)
+
     def createFolder(self):
-
-        if not os.path.exists(self.base_path+self.class_name):
-            print("Generating folders: '"+self.base_path+"'")
-            os.makedirs(self.base_path+self.class_name)
+        #TODO - Fix this shit
+        if not os.path.exists(self.folder_path()):
+            print("Generating folders: '"+self.folder_path()+"'")
+            os.makedirs(self.folder_path())
         else:
-            print("unable to create folder", os.path.exists(self.base_path+self.class_name))
+            print("Unable to create folder", os.path.exists(self.folder_path()))
 
-    ## Debería hacer un modulo para estas funciones 'ImageUtils?'
     def npToImage(self, nparray):
         img = Image.fromarray(nparray.astype('uint8'))
         return img

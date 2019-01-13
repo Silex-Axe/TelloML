@@ -137,6 +137,7 @@ class GUI(object):
             if self.current_frame is not frame:
                 #rotation correction for pygame
                 frame = np.rot90(frame)
+                frame= np.flip(frame, axis=0)
                 frame = pygame.surfarray.make_surface(frame)                
                 self.screen.blit(frame,(0,0))
                 self.current_image = frame

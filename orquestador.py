@@ -6,12 +6,9 @@ import tellopy
 # Crea a control, ml y gui y los comunica
 # Si se caen los levanta de nuevo (Docker?)
 sys.path += ["src"]
-
 import control
 import gui as g
 import ml as m
-
-
 
 def main():
     global dron, ctrl, gui, ml

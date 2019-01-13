@@ -20,7 +20,7 @@ class Control(object):
         self.speed = 30
 
         self.controls = {
-            "p": lambda drone,speed: self.startMlProcess(),
+            "p": lambda drone,speed: self.startMlProcess(speed),
             "t": lambda drone,speed: self.startSampleTake(speed),
             "escape": lambda drone,speed: self.quitFunction(),
             'w': 'forward',
@@ -34,6 +34,10 @@ class Control(object):
             'right shift': 'down',
             'q': 'counter_clockwise',
             'e': 'clockwise',
+            #Add and decrease speed
+            '1': lambda drone,speed: self.increaseSpeed(1),
+            '0': lambda drone,speed: self.decreaseSpeed(1),
+
             # arrow keys for fast turns and altitude adjustments
             'left': lambda drone, speed: drone.counter_clockwise(speed*2),
             'right': lambda drone, speed: drone.clockwise(speed*2),
@@ -41,8 +45,6 @@ class Control(object):
             'tab': lambda drone, speed: drone.takeoff(),
             'backspace': lambda drone, speed: drone.land(),
             #Modify overall speed
-            '1': lambda drone,speed: self.increaseSpeed(1),
-            '0': lambda drone,speed: self.decreaseSpeed(1),
         }
         #Init sampler
         self.sampler = sampler.Sampler()
@@ -53,11 +55,15 @@ class Control(object):
    
     def decreaseSpeed(self,n):
         self.increaseSpeed(-n)
-        
-    def startMlProcess(self):
+
+    #TODO - speed tiene que ser un booleano o un int y cambiar de nombre >:(
+    def startMlProcess(self, speed):
+        if speed is not 0:
+            self.ml.start()
         print("startMlProcess")
     
     def startSampleTake(self,speed):
+        
         if speed is not 0:
             print("startSampleTake")
             self.sampler.startSampling()
@@ -90,6 +96,9 @@ class Control(object):
             try:
                 while True:
                     time.sleep(0.01)
+                    if self.ml is not None:
+                        self.ml_actual_prediction = self.ml.predictionOut()
+                        
                     if self.gui.running:
                         e = self.gui.eventOut()
                         if e is not None:      
@@ -104,6 +113,7 @@ class Control(object):
                                 key_handler = self.controls[e]
                                 if type(key_handler) == str:
                                     getattr(self.dron, key_handler)(speed)
+                                    #TODO - Quitar en un futuro?
                                     self.ml_actual_prediction = key_handler
                                 else:
                                     key_handler(self.dron, speed)
