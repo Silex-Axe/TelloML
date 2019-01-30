@@ -20,9 +20,9 @@ class Control(object):
         self.speed = 30
 
         self.controls = {
-            "p": lambda drone,speed: self.startMlProcess(speed),
-            "t": lambda drone,speed: self.startSampleTake(speed),
-            "escape": lambda drone,speed: self.quitFunction(),
+            "p": lambda dron,speed: self.startMlProcess(speed),
+            "t": lambda dron,speed: self.startSampleTake(speed),
+            "escape": lambda dron,speed: self.quitFunction(),
             'w': 'forward',
             's': 'backward',
             'a': 'left',
@@ -32,18 +32,17 @@ class Control(object):
             'space': 'up',
             'left shift': 'down',
             'right shift': 'down',
-            'q': 'counter_clockwise',
-            'e': 'clockwise',
             #Add and decrease speed
-            '1': lambda drone,speed: self.increaseSpeed(1),
-            '0': lambda drone,speed: self.decreaseSpeed(1),
+            '1': lambda dron,speed: self.increaseSpeed(1),
+            '0': lambda dron,speed: self.decreaseSpeed(1),
 
             # arrow keys for fast turns and altitude adjustments
-            'left': lambda drone, speed: drone.counter_clockwise(speed*2),
-            'right': lambda drone, speed: drone.clockwise(speed*2),
-
-            'tab': lambda drone, speed: drone.takeoff(),
-            'backspace': lambda drone, speed: drone.land(),
+            'q': 'counter_clockwise',
+            'e': 'clockwise',
+            'left': lambda dron, speed: dron.counter_clockwise(speed*2),
+            'right': lambda dron, speed: dron.clockwise(speed*2),
+            'tab': lambda dron, speed: dron.takeoff(),
+            'backspace': lambda dron, speed: dron.land(),
             #Modify overall speed
         }
         #Init sampler
@@ -98,7 +97,7 @@ class Control(object):
                     time.sleep(0.01)
                     if self.ml is not None:
                         self.ml_actual_prediction = self.ml.predictionOut()
-                        
+   
                     if self.gui.running:
                         e = self.gui.eventOut()
                         if e is not None:      
@@ -108,7 +107,6 @@ class Control(object):
                                 e = e[1:]
                             else:
                                 speed=self.speed
-
                             if e in self.controls:
                                 key_handler = self.controls[e]
                                 if type(key_handler) == str:
@@ -127,31 +125,51 @@ class Control(object):
         try:
             container = av.open(self.dron.get_video_stream())
             
-            print("TimeBase: ", container.streams.video[0].time_base)
-            print("AVGFrameRate: ", container.streams.video[0].average_rate)
-            #container.streams.video[0].thread_type = 'AUTO'
+            #Record stuff
+            '''
+            record_seconds=4
+            record_start = None
+            recording=True
+            container_2 =  av.open('test.mp4',mode='w')
+            record_stream = container_2.add_stream('mpeg4', rate=24)
+            record_stream.width = 960
+            record_stream.height = 720
+            record_stream.pix_fmt = 'yuv420p'
+            '''
             #Drop first frames (to catch up)
             frame_skip=300
+            generator = container.decode(video=0)
 
             #This is infinite because the frames will be appearing continuously
-            generator = container.decode(video=0)
-            print(generator)
-
             for frame in generator:
                 start_time = time.time()
                 if 0 < frame_skip:
                     frame_skip = frame_skip - 1
                     continue
-                #print("index:",frame.index,"corrupt:",frame.is_corrupt)
-                #image = np.array(frame.to_image())#cv2.cvtColor(np.array(frame.to_image()), cv2.COLOR_RGB2BGR)                            
-                #image = cv2.cvtColor(frame.to_ndarray(), cv2.COLOR_RGB2BGR)     
-                #print(frame)
                 image = frame.to_ndarray(format='rgb24')
-                #print("Shape: ",image.shape)
                 self.dron_actual_frame = image
+                #Recording
+                '''
+                if record_start is None:
+                    record_start = time.time()
+                    print("Start recording:", record_start)
+                if (record_start-time.time())/1000 < record_seconds:
+                    for packet in record_stream.encode(frame):
+                        container_2.mux(packet)
+                elif recording :
+                    print("stop recording:", record_start)
+                    container_2.close()
+                    recording=False
+                print("tick",(record_start-time.time())/1000)
+                '''
                 time_base = max(1.0/60,frame.time_base)
                 frame_skip = int((time.time()-start_time)/time_base)
-                #print("Skip frames:",frame_skip, "Time: ", time.time()-start_time)
+
+
+
+
+
+
         except Exception as ex:
             print("Video thread exception: ",ex)
 
