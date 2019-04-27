@@ -7,7 +7,6 @@ class Out(object):
     BASE_SPEED = 30
     def __init__(self):
         self.speed = self.BASE_SPEED
-
     def up(self):
         pass
     def down(self):

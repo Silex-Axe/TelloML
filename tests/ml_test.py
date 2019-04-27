@@ -11,7 +11,7 @@ class ControlDummy(object):
         img_width=320
         img_path = './forward_144.bmp'
         img = load_img(img_path,target_size=(img_height,img_width))  
-        img = img_to_array(img)  
+        img = img_to_array(img)
         print(type(img))
         return img
 

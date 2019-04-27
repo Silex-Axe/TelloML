@@ -6,9 +6,9 @@ import tellopy
 # Crea a control, ml y gui y los comunica
 # Si se caen los levanta de nuevo (Docker?)
 sys.path += ["src"]
-import control
 from laptop_camera import LaptopCamera
-from data_out import Out
+#from data_out import Out
+from game_controller import GameController
 import gui as g
 import ml as m
 
@@ -16,7 +16,7 @@ def main():
     global dron, ctrl, gui, ml
    
     data_in = LaptopCamera()
-    data_out = Out()
+    data_out = GameController()
     gui = g.GUI()
     ml = m.ML()
     #dron = tellopy.Tello()
