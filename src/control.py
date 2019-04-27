@@ -22,7 +22,9 @@ class Control(object):
         self.controls = {
             "p": lambda dron,speed: self.startMlProcess(speed),
             "t": lambda dron,speed: self.startSampleTake(speed),
+
             "escape": lambda dron,speed: self.quitFunction(),
+
             'w': 'forward',
             's': 'backward',
             'a': 'left',
@@ -32,6 +34,7 @@ class Control(object):
             'space': 'up',
             'left shift': 'down',
             'right shift': 'down',
+
             #Add and decrease speed
             '1': lambda dron,speed: self.increaseSpeed(1),
             '0': lambda dron,speed: self.decreaseSpeed(1),
@@ -39,6 +42,7 @@ class Control(object):
             # arrow keys for fast turns and altitude adjustments
             'q': 'counter_clockwise',
             'e': 'clockwise',
+
             'left': lambda dron, speed: dron.counter_clockwise(speed*2),
             'right': lambda dron, speed: dron.clockwise(speed*2),
             'tab': lambda dron, speed: dron.takeoff(),
@@ -50,7 +54,7 @@ class Control(object):
         self.sampler.ctrl=self
     
     def increaseSpeed(self,n):
-        self.speed = self.speed+1
+        self.speed = self.speed+n
    
     def decreaseSpeed(self,n):
         self.increaseSpeed(-n)
@@ -164,12 +168,6 @@ class Control(object):
                 '''
                 time_base = max(1.0/60,frame.time_base)
                 frame_skip = int((time.time()-start_time)/time_base)
-
-
-
-
-
-
         except Exception as ex:
             print("Video thread exception: ",ex)
 

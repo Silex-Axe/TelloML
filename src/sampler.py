@@ -4,6 +4,10 @@ import os
 import time
 import threading
 class Sampler(object):
+    '''
+    This is an object that can save frames to meory for later usage.
+    
+    '''
     def __init__(self):
         self.base_path ="./model_data/samples/"
         self.class_name="default"

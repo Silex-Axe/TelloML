@@ -16,6 +16,7 @@ class ML(object):
         self.model_path = "./model_data/"
         self.model = None
         self.prediction = None
+        self.data_input = None
 
     #TODO - unificar init() start() startXXX()
     def start(self):
@@ -24,7 +25,8 @@ class ML(object):
     
     def stop(self):
         self.driving=False
-
+    def setDataIn(self,data_in):
+        self.data_in = data_in
     def mlThread(self):
         print("Loading ML model")
         self.model = self.loadKerasModel(self.model_path)
@@ -33,8 +35,8 @@ class ML(object):
 
         while self.driving:
             time.sleep(0.01)
-            if self.ctrl is not None:
-                frame = self.ctrl.frameOut()
+            if self.data_in is not None:
+                frame = self.data_in.getFrame()
                 if frame is not current_frame:
                     current_frame = frame
                     frame = cv2.resize(frame, dsize=(img_height, img_width), interpolation=cv2.INTER_CUBIC)
@@ -70,3 +72,10 @@ class ML(object):
             return loaded_model
         except Exception as e:
             print("Exception loading model:",e)
+
+class AutonomousController(object):
+    '''
+    Basic automatic controller that keeps position and does nothing :)
+    '''
+    def __init__(self):
+        pass
