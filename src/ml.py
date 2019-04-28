@@ -6,19 +6,20 @@ from tensorflow.python.keras.models import model_from_json
 #Usamos resnet50 por ahora, así que hay que preprocesar la entrada con esto
 from tensorflow.python.keras.applications.resnet50 import preprocess_input
 import cv2
+from autonomous_control import AutonomousControl
 
 #ml stands for Machine Learning (Module)
-class ML(object):
+class ML(AutonomousControl):
     def __init__(self):
+        AutonomousControl.__init__(self)
         self.ctrl_in = "Imagen"
         self.driving = False
         self.ctrl=None
         self.model_path = "./model_data/"
         self.model = None
         self.prediction = None
-        self.data_input = None
+        self.data_in = None
 
-    #TODO - unificar init() start() startXXX()
     def start(self):
         self.driving=True
         threading.Thread(target=self.mlThread, args=[]).start()
@@ -56,7 +57,6 @@ class ML(object):
         self.stop()
         pass
 
-    #TODO - revisar nombres
     def loadKerasModel(self,path):
         print("loadKeras model")
         try:
@@ -72,10 +72,3 @@ class ML(object):
             return loaded_model
         except Exception as e:
             print("Exception loading model:",e)
-
-class AutonomousController(object):
-    '''
-    Basic automatic controller that keeps position and does nothing :)
-    '''
-    def __init__(self):
-        pass

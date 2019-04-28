@@ -1,6 +1,7 @@
 from data_out import Out
-
+# TODO - change to a cherrypy server?
 from flask import Flask
+from flask import request
 from flask_cors import CORS, cross_origin
 import threading
 import time
@@ -14,8 +15,8 @@ class GameController(Out):
         Out.__init__(self)
         self.state = 'stop'
         self.app=None
-        answer_questions_thread = threading.Thread(target=self.setup_webservice)
-        answer_questions_thread.start()
+        self.answer_questions_thread = threading.Thread(target=self.setup_webservice)
+        self.answer_questions_thread.start()
 
     def setup_webservice(self):
         self.app = Flask(__name__)
@@ -23,7 +24,6 @@ class GameController(Out):
         self.app.config['CORS_HEADERS'] = 'Content-Type'
         @self.app.route("/")
         def hello():
-            print(self.state)
             return self.state
         self.app.run(port=9000)
 
@@ -68,5 +68,6 @@ class GameController(Out):
     def set_speed(self,speed):
         self.speed = speed
 
-    def quit():
+    def quit(self):
+        self.shutdown_server()
         print("Quit GameController")

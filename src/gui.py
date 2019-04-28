@@ -12,8 +12,6 @@ class GUI(object):
     
 
     def __init__(self):        
-        #self.ctrl_in = "Video Stream/Frame", "Dron Status", "Prediction [, ?] "
-        self.ctrl = None
         self.data_in = None
         self.data_out = None
 
@@ -28,7 +26,7 @@ class GUI(object):
         self.window_name = "Dron controller"
         #Controls definition
         self.controls = {
-            'p': lambda out: self.startMlProcess(),
+            'p': lambda out: self.startAutonomousControl(),
             't': lambda out: self.startSampleTake(),
             'escape': lambda out: self.quit(),
             'w': lambda out: out.forward(),
@@ -74,7 +72,7 @@ class GUI(object):
                 time.sleep(0.01)
                 # Autonomous control
                 if self.autonomous_control is not None and self.autonomous_control_activated:
-                    self.ml_actual_prediction = self.autonomous_control.predictionOut()
+                    self.autonomousAction(self.autonomous_control.predictionOut())
 
                 for e in pygame.event.get():
                     #Keydown (start action)
@@ -99,8 +97,6 @@ class GUI(object):
             except Exception as e:
                 print("Exception ",e)
 
-    def setCtrl(self, ctrl):
-        self.ctrl = ctrl
 
     def setDataIn(self,data_in):
         self.data_in = data_in
@@ -109,7 +105,7 @@ class GUI(object):
         self.data_out = data_out
 
     def setAutonomousControl(self,controller):
-        self.auto_controller = controller
+        self.autonomous_control = controller
 
     def eventOut(self):
         #Consume the stored event
@@ -117,6 +113,28 @@ class GUI(object):
         self.event_key = None
         return event
 
+    def startAutonomousControl(self):
+        if self.autonomous_control is not None and not self.autonomous_control_activated :
+            self.autonomous_control_activated=True
+            self.autonomous_control.start()
+        else:
+            self.autonomous_control_activated=False
+        print("Auto control active:"+self.autonomous_control_activated)
+    
+    def autonomousAction(self,action):
+            if action == "forward":
+                self.data_out.forward()
+            if action == "backward":
+                self.data_out.backward()
+            if action == "left":
+                self.data_out.left()
+            if action == "right":
+                self.data_out.right()
+            if action == "up":
+                self.data_out.up()
+            if action == "down":
+                self.data_out.down()
+        
     def updateHUD(self):
         '''
         Draw HUD values
@@ -128,20 +146,19 @@ class GUI(object):
         '''
         screen_width,screen_height = self.screen.get_size()
         stroke_width = 10
-        if self.ctrl is not None:
+        if self.autonomous_control is not None:
             #top
-            if(self.ctrl.predictionOut()== "up"): pygame.draw.rect(self.screen, (255,0,0),(screen_width/2-stroke_width*1.5,0,stroke_width*3,stroke_width),0)
+            if(self.autonomous_control.predictionOut()== "up"): pygame.draw.rect(self.screen, (255,0,0),(screen_width/2-stroke_width*1.5,0,stroke_width*3,stroke_width),0)
             #right
-            if(self.ctrl.predictionOut()== "right"): pygame.draw.rect(self.screen, (255,0,0),(screen_width-stroke_width,screen_height/2-stroke_width*1.5,stroke_width,stroke_width*3),0)
+            if(self.autonomous_control.predictionOut()== "right"): pygame.draw.rect(self.screen, (255,0,0),(screen_width-stroke_width,screen_height/2-stroke_width*1.5,stroke_width,stroke_width*3),0)
             #bottom
-            if(self.ctrl.predictionOut()== "down"): pygame.draw.rect(self.screen, (255,0,0),(screen_width/2-stroke_width*1.5,screen_height-stroke_width,stroke_width*3,stroke_width),0)
+            if(self.autonomous_control.predictionOut()== "down"): pygame.draw.rect(self.screen, (255,0,0),(screen_width/2-stroke_width*1.5,screen_height-stroke_width,stroke_width*3,stroke_width),0)
             #left
-            if(self.ctrl.predictionOut()== "left"): pygame.draw.rect(self.screen, (255,0,0),(0,screen_height/2-stroke_width*1.5,stroke_width,stroke_width*3),0)
-
+            if(self.autonomous_control.predictionOut()== "left"): pygame.draw.rect(self.screen, (255,0,0),(0,screen_height/2-stroke_width*1.5,stroke_width,stroke_width*3),0)
             #forward
-            if(self.ctrl.predictionOut()== "forward"): pygame.draw.rect(self.screen, (255,0,0),(screen_width/2-stroke_width*1.5,screen_height/2-stroke_width*1.5,stroke_width*3,stroke_width*3),0)
+            if(self.autonomous_control.predictionOut()== "forward"): pygame.draw.rect(self.screen, (255,0,0),(screen_width/2-stroke_width*1.5,screen_height/2-stroke_width*1.5,stroke_width*3,stroke_width*3),0)
             #backward
-            if(self.ctrl.predictionOut()== "backward"): pygame.draw.rect(self.screen, (255,255,0),(screen_width/2-stroke_width*0.5,screen_height/2-stroke_width*0.5,stroke_width,stroke_width),0)
+            if(self.autonomous_control.predictionOut()== "backward"): pygame.draw.rect(self.screen, (255,255,0),(screen_width/2-stroke_width*0.5,screen_height/2-stroke_width*0.5,stroke_width,stroke_width),0)
         
         blits = []
         if self.data_in is not None: 
@@ -194,40 +211,6 @@ class GUI(object):
                 self.current_image = frame
         else:
             print("Unable to find data in")
-
-    def eventsThread(self):
-        '''
-            Gets the events from user interaction and the autonomous control system.
-        '''
-        try:
-            while True:
-                time.sleep(0.01)
-                # Autonomous control
-                if self.autonomous_control is not None and self.autonomous_control_activated:
-                    self.ml_actual_prediction = self.ml.predictionOut()
-                # User control
-                if self.gui.running:
-                    e = self.gui.eventOut()
-                    if e is not None:      
-                        print("input:",e)  
-                        if e[0]=='-':
-                            speed=0
-                            e = e[1:]
-                        else:
-                            speed=self.speed
-                        if e in self.controls:
-                            key_handler = self.controls[e]
-                            if type(key_handler) == str:
-                                getattr(self.dron, key_handler)(speed)
-                                #TODO - Quitar en un futuro?
-                                self.ml_actual_prediction = key_handler
-                            else:
-                                key_handler(self.dron, speed)
-                else:
-                    print("control: gui not running")
-                    time.sleep(0.2)
-        except Exception as ex:
-            print("event thread exception: ", ex )
     
     def quit(self):
         print("Quit gui")
@@ -236,9 +219,8 @@ class GUI(object):
             self.data_out.quit()
         if self.data_in is not None:
             self.data_in.quit()
-        if self.autonomous_control is not None: 
+        if self.autonomous_control is not None:
             self.autonomous_control.quit()
-
         pygame.quit()
         exit(0)
 
